@@ -9,6 +9,7 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   ts: number;
+  error?: boolean;
 };
 
 const isBrowser = () => typeof window !== "undefined";
@@ -51,20 +52,15 @@ export async function callGemini(opts: {
   attachments?: { mimeType: string; data: string }[]; // base64 (no prefix)
 }): Promise<string> {
   const { apiKey, systemPrompt, messages, attachments } = opts;
-  const contents = messages.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
-  }));
-  if (attachments?.length && contents.length) {
-    const last = contents[contents.length - 1];
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  const combined = `${systemPrompt ? systemPrompt + "\n\n" : ""}${lastUser?.content ?? ""}`;
+  const parts: Array<Record<string, unknown>> = [{ text: combined }];
+  if (attachments?.length) {
     for (const a of attachments) {
-      last.parts.push({ inline_data: { mime_type: a.mimeType, data: a.data } } as never);
+      parts.push({ inline_data: { mime_type: a.mimeType, data: a.data } });
     }
   }
-  const body: Record<string, unknown> = { contents };
-  if (systemPrompt.trim()) {
-    body.system_instruction = { parts: [{ text: systemPrompt }] };
-  }
+  const body = { contents: [{ parts }] };
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
@@ -73,7 +69,7 @@ export async function callGemini(opts: {
       body: JSON.stringify(body),
     },
   );
-  if (!res.ok) {
+  if (res.status !== 200) {
     const t = await res.text();
     throw new Error(`Gemini ${res.status}: ${t}`);
   }
@@ -82,6 +78,11 @@ export async function callGemini(opts: {
     data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
   if (!text) throw new Error("Empty response from Gemini");
   return text;
+}
+
+export function resolveApiKey(): string {
+  const envKey = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined) ?? "";
+  return envKey || getApiKey();
 }
 
 export function fileToBase64(file: File): Promise<{ mimeType: string; data: string }> {

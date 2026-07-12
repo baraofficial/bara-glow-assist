@@ -6,7 +6,7 @@ import {
   callGemini,
   clearHistory,
   fileToBase64,
-  getApiKey,
+  resolveApiKey,
   getHistory,
   getSystemPrompt,
   setHistory,
@@ -63,14 +63,45 @@ function ChatPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, ready]);
 
-  const sendMessage = async () => {
-    const text = input.trim();
-    if (!text && pendingFiles.length === 0) return;
-    const apiKey = getApiKey();
+  const runAssistant = async (history: ChatMessage[], files: File[]) => {
+    const apiKey = resolveApiKey();
     if (!apiKey) {
       toast.error("Add your Gemini API Key in Settings first.");
       return;
     }
+    setSending(true);
+    try {
+      const attachments = await Promise.all(files.map(fileToBase64));
+      const reply = await callGemini({
+        apiKey,
+        systemPrompt: getSystemPrompt(),
+        messages: history,
+        attachments,
+      });
+      setMessages((m) => [
+        ...m,
+        { id: crypto.randomUUID(), role: "assistant", content: reply, ts: Date.now() },
+      ]);
+    } catch (err) {
+      console.error("[BARA] Gemini call failed:", err);
+      setMessages((m) => [
+        ...m,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "Sorry cak, BARA is having trouble connecting. Please try again in a moment.",
+          ts: Date.now(),
+          error: true,
+        },
+      ]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    const text = input.trim();
+    if (!text && pendingFiles.length === 0) return;
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
@@ -80,36 +111,22 @@ function ChatPage() {
     const next = [...messages, userMsg];
     setMessages(next);
     setInput("");
-    setSending(true);
-    try {
-      const attachments = await Promise.all(pendingFiles.map(fileToBase64));
-      setPendingFiles([]);
-      const reply = await callGemini({
-        apiKey,
-        systemPrompt: getSystemPrompt(),
-        messages: next,
-        attachments,
-      });
-      setMessages((m) => [
-        ...m,
-        { id: crypto.randomUUID(), role: "assistant", content: reply, ts: Date.now() },
-      ]);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to connect. Check API Key");
-      setMessages((m) => [
-        ...m,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: "⚠️ Failed to connect. Check API Key",
-          ts: Date.now(),
-        },
-      ]);
-    } finally {
-      setSending(false);
-    }
+    const files = pendingFiles;
+    setPendingFiles([]);
+    await runAssistant(next, files);
   };
+
+  const retryLast = async () => {
+    // Drop trailing error messages, keep prior conversation, resend
+    let trimmed = [...messages];
+    while (trimmed.length && trimmed[trimmed.length - 1].role === "assistant") {
+      trimmed = trimmed.slice(0, -1);
+    }
+    if (!trimmed.length) return;
+    setMessages(trimmed);
+    await runAssistant(trimmed, []);
+  };
+
 
   const handleClear = () => {
     if (!confirm("Clear all chat history?")) return;
@@ -245,6 +262,15 @@ function ChatPage() {
                   }
                 >
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                  {m.error && (
+                    <button
+                      onClick={retryLast}
+                      disabled={sending}
+                      className="mt-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1 text-xs text-primary transition hover:bg-primary/20 disabled:opacity-50"
+                    >
+                      Retry
+                    </button>
+                  )}
                 </div>
               </li>
             ))}
