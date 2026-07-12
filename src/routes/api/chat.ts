@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createClient } from "@supabase/supabase-js";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
@@ -20,6 +21,21 @@ export const Route = createFileRoute("/api/chat")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+          const backendUrl = process.env.SUPABASE_URL;
+          const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+          if (!token || !backendUrl || !publishableKey) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+
+          const backend = createClient(backendUrl, publishableKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          });
+          const { error: authError } = await backend.auth.getUser(token);
+          if (authError) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+
           const apiKey = process.env.GEMINI_API_KEY;
           if (!apiKey) {
             console.error("[BARA] GEMINI_API_KEY is not configured");

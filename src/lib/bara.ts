@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 const KEYS = {
   systemPrompt: "bara.systemPrompt",
   history: "bara.chatHistory",
@@ -44,9 +46,16 @@ export async function callGemini(opts: {
   const { systemPrompt, messages, attachments } = opts;
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const combined = `${systemPrompt ? systemPrompt + "\n\n" : ""}${lastUser?.content ?? ""}`;
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (!accessToken) throw new Error("No authenticated session");
+
   const res = await fetch("/api/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
     body: JSON.stringify({ message: combined, attachments }),
   });
   if (res.status !== 200) throw new Error(`Chat request failed with status ${res.status}`);

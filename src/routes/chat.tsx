@@ -12,7 +12,6 @@ import {
   type ChatMessage,
 } from "@/lib/bara";
 import { LogoFlame } from "@/components/LogoFlame";
-import { toast } from "sonner";
 import { Loader2, Paperclip, Send, Settings, LogOut, Trash2, Download } from "lucide-react";
 
 export const Route = createFileRoute("/chat")({
