@@ -6,7 +6,6 @@ import {
   callGemini,
   clearHistory,
   fileToBase64,
-  resolveApiKey,
   getHistory,
   getSystemPrompt,
   setHistory,
@@ -64,16 +63,10 @@ function ChatPage() {
   }, [messages, ready]);
 
   const runAssistant = async (history: ChatMessage[], files: File[]) => {
-    const apiKey = resolveApiKey();
-    if (!apiKey) {
-      toast.error("Add your Gemini API Key in Settings first.");
-      return;
-    }
     setSending(true);
     try {
       const attachments = await Promise.all(files.map(fileToBase64));
       const reply = await callGemini({
-        apiKey,
         systemPrompt: getSystemPrompt(),
         messages: history,
         attachments,
