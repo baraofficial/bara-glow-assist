@@ -12,7 +12,7 @@ import {
   setHistory,
   type ChatMessage,
 } from "@/lib/bara";
-import logo from "@/assets/bara-logo.png";
+import { LogoFlame } from "@/components/LogoFlame";
 import { toast } from "sonner";
 import { Loader2, Paperclip, Send, Settings, LogOut, Trash2, Download } from "lucide-react";
 
