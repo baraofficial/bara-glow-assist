@@ -9,6 +9,7 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   ts: number;
+  error?: boolean;
 };
 
 const isBrowser = () => typeof window !== "undefined";
