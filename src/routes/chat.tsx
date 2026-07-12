@@ -262,6 +262,15 @@ function ChatPage() {
                   }
                 >
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                  {m.error && (
+                    <button
+                      onClick={retryLast}
+                      disabled={sending}
+                      className="mt-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1 text-xs text-primary transition hover:bg-primary/20 disabled:opacity-50"
+                    >
+                      Retry
+                    </button>
+                  )}
                 </div>
               </li>
             ))}
