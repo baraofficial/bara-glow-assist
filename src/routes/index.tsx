@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import logo from "@/assets/bara-logo.png";
+import { LogoFlame } from "@/components/LogoFlame";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
@@ -58,13 +58,7 @@ function Login() {
 
       <section className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-12">
         <div className="flex flex-col items-center text-center">
-          <img
-            src={logo}
-            alt="BARA AI logo"
-            width={160}
-            height={160}
-            className="logo-glow h-40 w-40 select-none"
-          />
+          <LogoFlame size={160} className="h-40 w-40 select-none" />
 
           <h1 className="mt-8 text-5xl font-black tracking-tight sm:text-6xl neon-text">
             BARA AI v20
