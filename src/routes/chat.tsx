@@ -6,7 +6,7 @@ import {
   callGemini,
   clearHistory,
   fileToBase64,
-  getApiKey,
+  resolveApiKey,
   getHistory,
   getSystemPrompt,
   setHistory,
