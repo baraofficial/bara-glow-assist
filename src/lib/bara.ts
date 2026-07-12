@@ -46,8 +46,8 @@ export async function callGemini(opts: {
   const { systemPrompt, messages, attachments } = opts;
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const combined = `${systemPrompt ? systemPrompt + "\n\n" : ""}${lastUser?.content ?? ""}`;
-  const { data } = await supabase.auth.getSession();
-  const accessToken = data.session?.access_token;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
   if (!accessToken) throw new Error("No authenticated session");
 
   const res = await fetch("/api/chat", {
