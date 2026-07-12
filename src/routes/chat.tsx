@@ -174,7 +174,7 @@ function ChatPage() {
       <header className="sticky top-0 z-20 border-b border-primary/20 bg-[#0a0a0a]/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2.5">
-            <img src={logo} alt="" width={32} height={32} className="h-8 w-8 logo-glow" />
+            <LogoFlame size={32} className="h-8 w-8" />
             <div className="leading-tight">
               <div className="text-sm font-bold neon-text">BARA AI</div>
               <div className="text-[10px] text-muted-foreground">v24.08</div>
@@ -241,7 +241,7 @@ function ChatPage() {
       <div ref={scrollRef} className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto px-4 py-6">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center opacity-80">
-            <img src={logo} alt="" width={96} height={96} className="h-24 w-24 logo-glow" />
+            <LogoFlame size={96} className="h-24 w-24" />
             <h2 className="mt-4 text-2xl font-bold neon-text">How can I help, {displayName.split(" ")[0]}?</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Ask anything. Attach files or images with the + button.
