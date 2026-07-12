@@ -1,6 +1,7 @@
+import { supabase } from "@/integrations/supabase/client";
+
 const KEYS = {
   systemPrompt: "bara.systemPrompt",
-  apiKey: "bara.geminiApiKey",
   history: "bara.chatHistory",
 };
 
@@ -22,14 +23,6 @@ export function setSystemPrompt(v: string) {
   if (isBrowser()) localStorage.setItem(KEYS.systemPrompt, v);
 }
 
-export function getApiKey(): string {
-  if (!isBrowser()) return "";
-  return localStorage.getItem(KEYS.apiKey) ?? "";
-}
-export function setApiKey(v: string) {
-  if (isBrowser()) localStorage.setItem(KEYS.apiKey, v);
-}
-
 export function getHistory(): ChatMessage[] {
   if (!isBrowser()) return [];
   try {
@@ -46,43 +39,31 @@ export function clearHistory() {
 }
 
 export async function callGemini(opts: {
-  apiKey: string;
   systemPrompt: string;
   messages: ChatMessage[];
   attachments?: { mimeType: string; data: string }[]; // base64 (no prefix)
 }): Promise<string> {
-  const { apiKey, systemPrompt, messages, attachments } = opts;
+  const { systemPrompt, messages, attachments } = opts;
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const combined = `${systemPrompt ? systemPrompt + "\n\n" : ""}${lastUser?.content ?? ""}`;
-  const parts: Array<Record<string, unknown>> = [{ text: combined }];
-  if (attachments?.length) {
-    for (const a of attachments) {
-      parts.push({ inline_data: { mime_type: a.mimeType, data: a.data } });
-    }
-  }
-  const body = { contents: [{ parts }] };
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${encodeURIComponent(apiKey)}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) throw new Error("No authenticated session");
+
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
     },
-  );
-  if (res.status !== 200) {
-    const t = await res.text();
-    throw new Error(`Gemini ${res.status}: ${t}`);
-  }
-  const data = await res.json();
-  const text =
-    data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
+    body: JSON.stringify({ message: combined, attachments }),
+  });
+  if (res.status !== 200) throw new Error(`Chat request failed with status ${res.status}`);
+
+  const data = (await res.json()) as { text?: string };
+  const text = data.text ?? "";
   if (!text) throw new Error("Empty response from Gemini");
   return text;
-}
-
-export function resolveApiKey(): string {
-  const envKey = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined) ?? "";
-  return envKey || getApiKey();
 }
 
 export function fileToBase64(file: File): Promise<{ mimeType: string; data: string }> {

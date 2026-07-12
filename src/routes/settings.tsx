@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getApiKey, getSystemPrompt, setApiKey, setSystemPrompt } from "@/lib/bara";
+import { getSystemPrompt, setSystemPrompt } from "@/lib/bara";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
       { title: "Settings — BARA AI v24.08" },
-      { name: "description", content: "Configure your BARA AI system prompt and Gemini API key." },
+      { name: "description", content: "Configure your BARA AI system prompt." },
     ],
   }),
   component: SettingsPage,
@@ -19,7 +19,6 @@ function SettingsPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [prompt, setPrompt] = useState("");
-  const [key, setKey] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -28,14 +27,12 @@ function SettingsPage() {
         return;
       }
       setPrompt(getSystemPrompt());
-      setKey(getApiKey());
       setReady(true);
     });
   }, [navigate]);
 
   const save = () => {
     setSystemPrompt(prompt);
-    setApiKey(key.trim());
     toast.success("Settings saved");
   };
 
@@ -68,29 +65,6 @@ function SettingsPage() {
             rows={8}
             placeholder="You are BARA, a helpful assistant..."
             className="mt-3 w-full resize-y rounded-xl border border-primary/25 bg-black/40 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:neon-ring"
-          />
-        </section>
-
-        <section className="mt-5 rounded-2xl glass p-5">
-          <label className="block text-sm font-semibold text-foreground">Gemini API Key</label>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Get a key from{" "}
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary underline"
-            >
-              Google AI Studio
-            </a>
-            . Stored locally in your browser.
-          </p>
-          <input
-            type="password"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="AIza..."
-            className="mt-3 w-full rounded-xl border border-primary/25 bg-black/40 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:neon-ring"
           />
         </section>
 

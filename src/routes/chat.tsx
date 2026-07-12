@@ -6,14 +6,12 @@ import {
   callGemini,
   clearHistory,
   fileToBase64,
-  resolveApiKey,
   getHistory,
   getSystemPrompt,
   setHistory,
   type ChatMessage,
 } from "@/lib/bara";
 import { LogoFlame } from "@/components/LogoFlame";
-import { toast } from "sonner";
 import { Loader2, Paperclip, Send, Settings, LogOut, Trash2, Download } from "lucide-react";
 
 export const Route = createFileRoute("/chat")({
@@ -64,16 +62,10 @@ function ChatPage() {
   }, [messages, ready]);
 
   const runAssistant = async (history: ChatMessage[], files: File[]) => {
-    const apiKey = resolveApiKey();
-    if (!apiKey) {
-      toast.error("Add your Gemini API Key in Settings first.");
-      return;
-    }
     setSending(true);
     try {
       const attachments = await Promise.all(files.map(fileToBase64));
       const reply = await callGemini({
-        apiKey,
         systemPrompt: getSystemPrompt(),
         messages: history,
         attachments,
