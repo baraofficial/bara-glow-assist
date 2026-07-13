@@ -13,6 +13,7 @@ import {
 } from "@/lib/bara";
 import { LogoFlame } from "@/components/LogoFlame";
 import { Loader2, Paperclip, Send, Settings, LogOut, Trash2, Download } from "lucide-react";
+import { MessageContent } from "@/components/MessageContent";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -253,7 +254,11 @@ function ChatPage() {
                       : "max-w-[85%] rounded-2xl rounded-tl-sm border border-primary/20 bg-[#141018] px-4 py-2.5 text-sm text-foreground"
                   }
                 >
-                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                  {m.role === "assistant" ? (
+                    <MessageContent content={m.content} />
+                  ) : (
+                    <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                  )}
                   {m.error && (
                     <button
                       onClick={retryLast}
