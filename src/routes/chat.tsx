@@ -13,6 +13,7 @@ import {
 } from "@/lib/bara";
 import { LogoFlame } from "@/components/LogoFlame";
 import { Loader2, Paperclip, Send, Settings, LogOut, Trash2, Download } from "lucide-react";
+import { MessageContent } from "@/components/MessageContent";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
