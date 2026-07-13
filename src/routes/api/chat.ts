@@ -36,9 +36,9 @@ export const Route = createFileRoute("/api/chat")({
             return Response.json({ error: "Unauthorized" }, { status: 401 });
           }
 
-          const apiKey = process.env.GEMINI_API_KEY;
+          const apiKey = process.env.LOVABLE_API_KEY;
           if (!apiKey) {
-            console.error("[BARA] GEMINI_API_KEY is not configured");
+            console.error("[BARA] LOVABLE_API_KEY is not configured");
             return Response.json({ error: "Unable to connect" }, { status: 503 });
           }
 
@@ -47,26 +47,48 @@ export const Route = createFileRoute("/api/chat")({
             return Response.json({ error: "Invalid request" }, { status: 400 });
           }
 
-          const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
-          const parts = [
-            { text: parsed.data.message },
-            ...(parsed.data.attachments ?? []).map((attachment) => ({
-              inlineData: {
-                mimeType: attachment.mimeType,
-                data: attachment.data,
-              },
-            })),
-          ];
-          const result = await model.generateContent(parts);
-          const text = result.response.text();
+          const userContent: Array<
+            { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
+          > = [{ type: "text", text: parsed.data.message }];
+          for (const a of parsed.data.attachments ?? []) {
+            if (a.mimeType.startsWith("image/")) {
+              userContent.push({
+                type: "image_url",
+                image_url: { url: `data:${a.mimeType};base64,${a.data}` },
+              });
+            }
+          }
+
+          const gwRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-pro",
+              messages: [{ role: "user", content: userContent }],
+            }),
+          });
+
+          if (!gwRes.ok) {
+            const errText = await gwRes.text();
+            console.error("[BARA] Lovable AI gateway error:", gwRes.status, errText);
+            return Response.json({ error: "Unable to connect" }, { status: 502 });
+          }
+
+          const gwData = (await gwRes.json()) as {
+            choices?: Array<{ message?: { content?: string } }>;
+          };
+          const text = gwData.choices?.[0]?.message?.content ?? "";
 
           if (!text) {
-            console.error("[BARA] Gemini returned an empty response");
+            console.error("[BARA] Gateway returned an empty response");
             return Response.json({ error: "Unable to connect" }, { status: 502 });
           }
 
           return Response.json({ text });
+
         } catch (error) {
           console.error("[BARA] Gemini proxy failed:", error);
           return Response.json({ error: "Unable to connect" }, { status: 502 });
