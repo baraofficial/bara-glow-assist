@@ -61,10 +61,10 @@ function Login() {
           <LogoFlame size={160} className="h-40 w-40 select-none" />
 
           <h1 className="mt-8 text-5xl font-black tracking-tight sm:text-6xl neon-text">
-            BARA AI v20
+            Bara AI v24.08
           </h1>
           <p className="mt-3 max-w-sm text-sm text-muted-foreground sm:text-base">
-            Your Personal AI Assistant from Bara Official
+            AI Assistant from Bara Official
           </p>
 
           <button
@@ -76,7 +76,7 @@ function Login() {
             <span>{loading ? "Connecting…" : "Continue with Google"}</span>
           </button>
 
-          <p className="mt-6 text-xs text-muted-foreground/70">v24.08 • Powered by Gemini</p>
+          <p className="mt-6 text-xs text-muted-foreground/70">v24.08 • Powered by Gemini × Bara Official</p>
         </div>
       </section>
     </main>
