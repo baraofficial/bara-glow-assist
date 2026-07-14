@@ -22,23 +22,33 @@ export function LogoFlame({ size = 32, className = "", ...props }: LogoFlameProp
           <stop offset="45%" stopColor="#A855F7" />
           <stop offset="100%" stopColor="#6B21A8" />
         </linearGradient>
-        <linearGradient id="flameCore" x1="32" y1="24" x2="32" y2="58" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
-          <stop offset="60%" stopColor="#D8B4FE" stopOpacity="0.6" />
+        <linearGradient id="flameCore" x1="32" y1="26" x2="32" y2="58" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+          <stop offset="55%" stopColor="#E9D5FF" stopOpacity="0.7" />
           <stop offset="100%" stopColor="#A855F7" stopOpacity="0" />
         </linearGradient>
       </defs>
-      {/* Outer flame — sharp, tech shape */}
+      {/* Outer flame — teardrop with curled base */}
       <path
-        d="M32 3 L44 22 L38 24 L52 40 L44 42 L54 60 L32 52 L10 60 L20 42 L12 40 L26 24 L20 22 Z"
+        d="M34 3
+           C 33 14, 44 20, 46 32
+           C 48 44, 42 58, 32 60
+           C 22 60, 14 52, 14 41
+           C 14 33, 20 30, 22 22
+           C 24 28, 28 28, 28 22
+           C 30 26, 32 26, 34 3 Z"
         fill="url(#flameGrad)"
         stroke="#A855F7"
-        strokeWidth="1"
-        strokeLinejoin="miter"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
       />
-      {/* Inner glow core */}
+      {/* Inner glow flame */}
       <path
-        d="M32 20 L38 34 L34 36 L42 50 L32 46 L22 50 L30 36 L26 34 Z"
+        d="M33 22
+           C 33 30, 40 34, 40 44
+           C 40 52, 36 56, 32 56
+           C 28 56, 24 52, 24 44
+           C 24 38, 30 36, 30 30 Z"
         fill="url(#flameCore)"
       />
     </svg>
