@@ -144,6 +144,7 @@ export async function callGemini(opts: {
     }
     throw new Error(msg);
   }
+  const data = (await res.json()) as { text?: string };
   const text = data.text ?? "";
   if (!text) throw new Error("Empty response from Gemini");
   return text;
