@@ -74,6 +74,18 @@ export const Route = createFileRoute("/api/chat")({
           if (!gwRes.ok) {
             const errText = await gwRes.text();
             console.error("[BARA] Lovable AI gateway error:", gwRes.status, errText);
+            if (gwRes.status === 402) {
+              return Response.json(
+                { error: "AI credits exhausted. Please add credits in Lovable workspace billing." },
+                { status: 402 },
+              );
+            }
+            if (gwRes.status === 429) {
+              return Response.json(
+                { error: "Rate limit reached. Please wait a moment and try again." },
+                { status: 429 },
+              );
+            }
             return Response.json({ error: "Unable to connect" }, { status: 502 });
           }
 

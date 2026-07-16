@@ -124,12 +124,17 @@ function ChatPage() {
       persistMessages(id, next);
     } catch (err) {
       console.error("[BARA] Gemini call failed:", err);
+      const message = err instanceof Error ? err.message : "";
+      const friendly =
+        message && !/status \d+/i.test(message)
+          ? message
+          : "Sorry cak, BARA is having trouble connecting. Please try again in a moment.";
       const next = [
         ...history,
         {
           id: crypto.randomUUID(),
           role: "assistant" as const,
-          content: "Sorry cak, BARA is having trouble connecting. Please try again in a moment.",
+          content: friendly,
           ts: Date.now(),
           error: true,
         },
