@@ -44,7 +44,7 @@ function SettingsPage() {
   }, [navigate]);
 
   const email = user?.email?.toLowerCase() ?? "";
-  const isOwner = !!OWNER_EMAIL && email === OWNER_EMAIL;
+  const isOwner = email === OWNER_EMAIL;
 
   const savePrompt = () => {
     if (!isOwner) return;
