@@ -21,7 +21,9 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
-const OWNER_EMAIL = (import.meta.env.VITE_OWNER_EMAIL as string | undefined)?.toLowerCase();
+const OWNER_EMAIL =
+  (import.meta.env.VITE_OWNER_EMAIL as string | undefined)?.toLowerCase() ??
+  "bagoesrahmatulloh@gmail.com";
 
 function SettingsPage() {
   const navigate = useNavigate();
