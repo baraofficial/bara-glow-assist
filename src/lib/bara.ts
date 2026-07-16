@@ -134,9 +134,16 @@ export async function callGemini(opts: {
     },
     body: JSON.stringify({ message: combined, attachments }),
   });
-  if (res.status !== 200) throw new Error(`Chat request failed with status ${res.status}`);
-
-  const data = (await res.json()) as { text?: string };
+  if (res.status !== 200) {
+    let msg = `Chat request failed with status ${res.status}`;
+    try {
+      const data = (await res.json()) as { error?: string };
+      if (data?.error) msg = data.error;
+    } catch {
+      // ignore
+    }
+    throw new Error(msg);
+  }
   const text = data.text ?? "";
   if (!text) throw new Error("Empty response from Gemini");
   return text;
