@@ -1,7 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { createFileRoute } from "@tanstack/react-router";
+import { generateText } from "ai";
 import { z } from "zod";
-
+import {
+  createLovableAiGatewayProvider,
+  getLovableAiGatewayResponseHeaders,
+  getLovableAiGatewayRunId,
+} from "@/lib/ai-gateway.server";
 
 const requestSchema = z.object({
   message: z.string().trim().min(1).max(50_000),
@@ -48,61 +53,56 @@ export const Route = createFileRoute("/api/chat")({
           }
 
           const userContent: Array<
-            { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
+            { type: "text"; text: string } | { type: "image"; image: string; mediaType: string }
           > = [{ type: "text", text: parsed.data.message }];
           for (const a of parsed.data.attachments ?? []) {
             if (a.mimeType.startsWith("image/")) {
               userContent.push({
-                type: "image_url",
-                image_url: { url: `data:${a.mimeType};base64,${a.data}` },
+                type: "image",
+                image: a.data,
+                mediaType: a.mimeType,
               });
             }
           }
 
-          const gwRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: "google/gemini-3.6-flash",
-              messages: [{ role: "user", content: userContent }],
-            }),
+          const gateway = createLovableAiGatewayProvider(
+            apiKey,
+            getLovableAiGatewayRunId(request),
+          );
+          const result = await generateText({
+            model: gateway("google/gemini-3.6-flash"),
+            messages: [{ role: "user", content: userContent }],
           });
-
-          if (!gwRes.ok) {
-            const errText = await gwRes.text();
-            console.error("[BARA] Lovable AI gateway error:", gwRes.status, errText);
-            if (gwRes.status === 402) {
-              return Response.json(
-                { error: "AI credits exhausted. Please add credits in Lovable workspace billing." },
-                { status: 402 },
-              );
-            }
-            if (gwRes.status === 429) {
-              return Response.json(
-                { error: "Rate limit reached. Please wait a moment and try again." },
-                { status: 429 },
-              );
-            }
-            return Response.json({ error: "Unable to connect" }, { status: 502 });
-          }
-
-          const gwData = (await gwRes.json()) as {
-            choices?: Array<{ message?: { content?: string } }>;
-          };
-          const text = gwData.choices?.[0]?.message?.content ?? "";
+          const text = result.text;
 
           if (!text) {
             console.error("[BARA] Gateway returned an empty response");
             return Response.json({ error: "Unable to connect" }, { status: 502 });
           }
 
-          return Response.json({ text });
+          return Response.json(
+            { text },
+            { headers: getLovableAiGatewayResponseHeaders(result.response.headers) },
+          );
 
         } catch (error) {
           console.error("[BARA] Gemini proxy failed:", error);
+          const status =
+            typeof error === "object" && error !== null
+              ? Number("statusCode" in error ? error.statusCode : "status" in error ? error.status : 0)
+              : 0;
+          if (status === 402) {
+            return Response.json(
+              { error: "Kuota AI sedang habis. Silakan coba lagi setelah kuota tersedia." },
+              { status: 402 },
+            );
+          }
+          if (status === 429) {
+            return Response.json(
+              { error: "BARA sedang ramai. Tunggu sebentar lalu coba lagi." },
+              { status: 429 },
+            );
+          }
           return Response.json({ error: "Unable to connect" }, { status: 502 });
         }
       },
