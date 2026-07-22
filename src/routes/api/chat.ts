@@ -66,7 +66,7 @@ export const Route = createFileRoute("/api/chat")({
               Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: "google/gemini-2.5-pro",
+              model: "google/gemini-3.6-flash",
               messages: [{ role: "user", content: userContent }],
             }),
           });
