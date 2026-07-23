@@ -12,7 +12,7 @@ export function LogoFlame({ size = 32, className = "" }: LogoFlameProps) {
       width={size}
       height={size}
       alt="BARA AI"
-      className={`logo-glow drop-shadow-[0_0_15px_#EF4444] rounded-full ${className}`}
+      className={`rounded-full ${className}`}
       style={{ width: size, height: size }}
     />
   );
