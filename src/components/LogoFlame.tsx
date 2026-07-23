@@ -12,8 +12,8 @@ export function LogoFlame({ size = 32, className = "" }: LogoFlameProps) {
       width={size}
       height={size}
       alt="BARA AI"
-      className={`rounded-full ${className}`}
-      style={{ width: size, height: size }}
+      className={`rounded-full animate-spin ${className}`}
+      style={{ width: size, height: size, animationDuration: "6s" }}
     />
   );
 }
