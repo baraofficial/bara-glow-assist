@@ -17,18 +17,20 @@ import {
 } from "@/lib/bara";
 import { LogoFlame } from "@/components/LogoFlame";
 import {
+  Camera,
   Check,
   Copy,
   Forward,
+  Github,
   Loader2,
   Menu,
-  Paperclip,
   Plus,
   Send,
   Settings,
   ThumbsDown,
   ThumbsUp,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import { MessageContent } from "@/components/MessageContent";
@@ -56,6 +58,43 @@ function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
+
+  const handleGithubImport = async () => {
+    setAttachMenuOpen(false);
+    const url = window.prompt("Masukkan URL repository GitHub (contoh: https://github.com/owner/repo)");
+    if (!url) return;
+    const match = url.match(/github\.com\/([^/]+)\/([^/?#]+)/);
+    if (!match) {
+      toast.error("URL GitHub tidak valid");
+      return;
+    }
+    const [, owner, repoRaw] = match;
+    const repo = repoRaw.replace(/\.git$/, "");
+    setGithubLoading(true);
+    try {
+      const [infoRes, contentsRes] = await Promise.all([
+        fetch(`https://api.github.com/repos/${owner}/${repo}`),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/contents/`),
+      ]);
+      if (!infoRes.ok) throw new Error("Repo tidak ditemukan");
+      const info = await infoRes.json();
+      const contents = contentsRes.ok ? await contentsRes.json() : [];
+      const tree = Array.isArray(contents)
+        ? contents.map((c: { name: string; type: string }) => `- ${c.name}${c.type === "dir" ? "/" : ""}`).join("\n")
+        : "";
+      const summary = `📦 GitHub Repository: ${owner}/${repo}\nURL: ${url}\nDeskripsi: ${info.description ?? "-"}\nBahasa: ${info.language ?? "-"}\n⭐ ${info.stargazers_count ?? 0} | 🍴 ${info.forks_count ?? 0}\n\nStruktur (root):\n${tree}`;
+      setInput((prev) => (prev ? `${prev}\n\n${summary}` : summary));
+      toast.success("Data repository ditambahkan ke pesan");
+    } catch (e) {
+      console.error("[BARA] GitHub import failed:", e);
+      toast.error("Gagal mengambil data repository");
+    } finally {
+      setGithubLoading(false);
+    }
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -434,14 +473,69 @@ function ChatPage() {
                   if (fileRef.current) fileRef.current.value = "";
                 }}
               />
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 text-primary transition hover:bg-primary/20"
-                aria-label="Attach file"
-              >
-                <Paperclip className="h-4 w-4" />
-              </button>
+              <input
+                ref={cameraRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files ?? []);
+                  setPendingFiles((p) => [...p, ...files]);
+                  if (cameraRef.current) cameraRef.current.value = "";
+                }}
+              />
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setAttachMenuOpen((o) => !o)}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 text-primary transition hover:bg-primary/20"
+                  aria-label="Add attachment"
+                  aria-expanded={attachMenuOpen}
+                >
+                  {githubLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : attachMenuOpen ? (
+                    <X className="h-4 w-4" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                </button>
+                {attachMenuOpen && (
+                  <div className="absolute bottom-12 left-0 z-30 w-56 overflow-hidden rounded-xl border border-primary/30 bg-[#141018] shadow-xl">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachMenuOpen(false);
+                        fileRef.current?.click();
+                      }}
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-foreground transition hover:bg-primary/10"
+                    >
+                      <Upload className="h-4 w-4 text-primary" />
+                      Upload file
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachMenuOpen(false);
+                        cameraRef.current?.click();
+                      }}
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-foreground transition hover:bg-primary/10"
+                    >
+                      <Camera className="h-4 w-4 text-primary" />
+                      Kamera
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGithubImport}
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-foreground transition hover:bg-primary/10"
+                    >
+                      <Github className="h-4 w-4 text-primary" />
+                      Upload repository GitHub
+                    </button>
+                  </div>
+                )}
+              </div>
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
