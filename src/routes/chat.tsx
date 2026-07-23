@@ -531,7 +531,7 @@ function ChatPage() {
                       className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-foreground transition hover:bg-primary/10"
                     >
                       <Github className="h-4 w-4 text-primary" />
-                      Upload repository GitHub
+                      Impor repo GitHub
                     </button>
                   </div>
                 )}
