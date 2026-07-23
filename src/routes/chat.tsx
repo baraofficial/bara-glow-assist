@@ -58,6 +58,43 @@ function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
+
+  const handleGithubImport = async () => {
+    setAttachMenuOpen(false);
+    const url = window.prompt("Masukkan URL repository GitHub (contoh: https://github.com/owner/repo)");
+    if (!url) return;
+    const match = url.match(/github\.com\/([^/]+)\/([^/?#]+)/);
+    if (!match) {
+      toast.error("URL GitHub tidak valid");
+      return;
+    }
+    const [, owner, repoRaw] = match;
+    const repo = repoRaw.replace(/\.git$/, "");
+    setGithubLoading(true);
+    try {
+      const [infoRes, contentsRes] = await Promise.all([
+        fetch(`https://api.github.com/repos/${owner}/${repo}`),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/contents/`),
+      ]);
+      if (!infoRes.ok) throw new Error("Repo tidak ditemukan");
+      const info = await infoRes.json();
+      const contents = contentsRes.ok ? await contentsRes.json() : [];
+      const tree = Array.isArray(contents)
+        ? contents.map((c: { name: string; type: string }) => `- ${c.name}${c.type === "dir" ? "/" : ""}`).join("\n")
+        : "";
+      const summary = `📦 GitHub Repository: ${owner}/${repo}\nURL: ${url}\nDeskripsi: ${info.description ?? "-"}\nBahasa: ${info.language ?? "-"}\n⭐ ${info.stargazers_count ?? 0} | 🍴 ${info.forks_count ?? 0}\n\nStruktur (root):\n${tree}`;
+      setInput((prev) => (prev ? `${prev}\n\n${summary}` : summary));
+      toast.success("Data repository ditambahkan ke pesan");
+    } catch (e) {
+      console.error("[BARA] GitHub import failed:", e);
+      toast.error("Gagal mengambil data repository");
+    } finally {
+      setGithubLoading(false);
+    }
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
