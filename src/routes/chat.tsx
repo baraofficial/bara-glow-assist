@@ -17,18 +17,20 @@ import {
 } from "@/lib/bara";
 import { LogoFlame } from "@/components/LogoFlame";
 import {
+  Camera,
   Check,
   Copy,
   Forward,
+  Github,
   Loader2,
   Menu,
-  Paperclip,
   Plus,
   Send,
   Settings,
   ThumbsDown,
   ThumbsUp,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import { MessageContent } from "@/components/MessageContent";
