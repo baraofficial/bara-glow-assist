@@ -15,6 +15,9 @@ const requestSchema = z.object({
     .optional(),
 });
 
+// Google direct Gemini API model. Change here if you want a different one.
+const GEMINI_MODEL = "gemini-2.5-flash";
+
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
@@ -35,10 +38,13 @@ export const Route = createFileRoute("/api/chat")({
             return Response.json({ error: "Unauthorized" }, { status: 401 });
           }
 
-          const lovableKey = process.env.LOVABLE_API_KEY;
-          if (!lovableKey) {
-            console.error("[BARA] LOVABLE_API_KEY is not configured");
-            return Response.json({ error: "Unable to connect" }, { status: 503 });
+          const geminiKey = process.env.GEMINI_API_KEY;
+          if (!geminiKey) {
+            console.error("[BARA] GEMINI_API_KEY is not configured");
+            return Response.json(
+              { error: "Gagal: Cek API Key di Vercel" },
+              { status: 503 },
+            );
           }
 
           const parsed = requestSchema.safeParse(await request.json());
@@ -46,63 +52,67 @@ export const Route = createFileRoute("/api/chat")({
             return Response.json({ error: "Invalid request" }, { status: 400 });
           }
 
-          const userContent: Array<
-            | { type: "text"; text: string }
-            | { type: "image_url"; image_url: { url: string } }
-          > = [{ type: "text", text: parsed.data.message }];
+          const parts: Array<
+            | { text: string }
+            | { inline_data: { mime_type: string; data: string } }
+          > = [{ text: parsed.data.message }];
           for (const a of parsed.data.attachments ?? []) {
-            if (a.mimeType.startsWith("image/")) {
-              userContent.push({
-                type: "image_url",
-                image_url: { url: `data:${a.mimeType};base64,${a.data}` },
-              });
-            }
+            parts.push({ inline_data: { mime_type: a.mimeType, data: a.data } });
           }
 
-          const gatewayRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey)}`;
+          const geminiRes = await fetch(url, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Lovable-API-Key": lovableKey,
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-3.6-flash",
-              messages: [{ role: "user", content: userContent }],
+              contents: [{ role: "user", parts }],
             }),
           });
 
-          if (!gatewayRes.ok) {
-            const bodyText = await gatewayRes.text().catch(() => "");
-            console.error("[BARA] Gateway error", gatewayRes.status, bodyText);
-            if (gatewayRes.status === 429) {
+          if (!geminiRes.ok) {
+            const bodyText = await geminiRes.text().catch(() => "");
+            console.error("[BARA] Gemini error", geminiRes.status, bodyText);
+            if (geminiRes.status === 400 || geminiRes.status === 401 || geminiRes.status === 403) {
+              return Response.json(
+                { error: "Gagal: Cek API Key di Vercel" },
+                { status: geminiRes.status },
+              );
+            }
+            if (geminiRes.status === 429) {
               return Response.json(
                 { error: "BARA sedang ramai. Tunggu sebentar lalu coba lagi." },
                 { status: 429 },
               );
             }
-            if (gatewayRes.status === 402) {
-              return Response.json(
-                { error: "Kredit AI habis. Tambahkan kredit di workspace Lovable." },
-                { status: 402 },
-              );
-            }
-            return Response.json({ error: "Unable to connect" }, { status: 502 });
+            return Response.json(
+              { error: "Gagal: Cek API Key di Vercel" },
+              { status: 502 },
+            );
           }
 
-          const data = (await gatewayRes.json()) as {
-            choices?: Array<{ message?: { content?: string } }>;
+          const data = (await geminiRes.json()) as {
+            candidates?: Array<{
+              content?: { parts?: Array<{ text?: string }> };
+            }>;
           };
-          const text = data.choices?.[0]?.message?.content ?? "";
+          const text =
+            data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
 
           if (!text) {
-            console.error("[BARA] Gateway returned an empty response");
-            return Response.json({ error: "Unable to connect" }, { status: 502 });
+            console.error("[BARA] Gemini returned an empty response");
+            return Response.json(
+              { error: "Gagal: Cek API Key di Vercel" },
+              { status: 502 },
+            );
           }
 
           return Response.json({ text });
         } catch (error) {
           console.error("[BARA] Gemini proxy failed:", error);
-          return Response.json({ error: "Unable to connect" }, { status: 502 });
+          return Response.json(
+            { error: "Gagal: Cek API Key di Vercel" },
+            { status: 502 },
+          );
         }
       },
     },
