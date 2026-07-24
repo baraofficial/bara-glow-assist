@@ -167,7 +167,7 @@ function ChatPage() {
       const friendly =
         message && !/status \d+/i.test(message)
           ? message
-          : "Sorry cak, BARA is having trouble connecting. Please try again in a moment.";
+          : "Gagal: Cek API Key di Vercel";
       const next = [
         ...history,
         {
