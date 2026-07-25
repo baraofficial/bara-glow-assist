@@ -119,19 +119,6 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}> 
-      {/* NAVBAR + LOGO */}
-<header className="w-full border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
-  <div className="container mx-auto flex h-16 items-center px-4">
-    <Link to="/" className="flex items-center gap-2">
-      <img 
-        src="/Mangekyou_Sharingan_Sasuke_(Eternal).svg.png" 
-        alt="Bara AI Logo" 
-        className="h-10 w-10"
-      />
-      <span className="text-xl font-bold">BARA AI</span>
-    </Link>
-  </div>
-</header>
       <Outlet />
       <Toaster theme="dark" position="top-center" richColors />
     </QueryClientProvider>
