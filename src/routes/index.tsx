@@ -58,7 +58,12 @@ function Login() {
 
       <section className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-12">
         <div className="flex flex-col items-center text-center">
-          <LogoFlame size={160} className="h-40 w-40 select-none" />
+          <img
+  src="/Mangekyou_Sharingan_Sasuke_(Eternal).svg.png"
+  alt="Bara AI Logo"
+  className="h-40 w-40 select-none animate-spin"
+  style={{ animationDuration: '6s' }}
+/>
 
           <h1 className="mt-8 text-5xl font-black tracking-tight sm:text-6xl neon-text">
             Bara AI v24.08
@@ -76,7 +81,7 @@ function Login() {
             <span>{loading ? "Connecting…" : "Continue with Google"}</span>
           </button>
 
-          <p className="mt-6 text-xs text-muted-foreground/70">v24.08 • Powered by Gemini × Bara Official</p>
+          <p className="mt-6 text-xs text-muted-foreground/70">v24.08 • Powered by Gemini X Bara Official</p>
         </div>
       </section>
     </main>
