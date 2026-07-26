@@ -34,7 +34,7 @@ function Login() {
   const handleGoogle = async () => {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
+      const result = await supabse.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
       if (result.error) {
