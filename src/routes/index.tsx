@@ -32,22 +32,25 @@ function Login() {
   }, [navigate]);
 
   const handleGoogle = async () => {
-    setLoading(true);
-    try {
-      const result = await supabase.auth.signInWithOAuth("google", {
-        redirectTo: `https://bara-ai-new24.vercel.app/auth/callback`
-      });
-      if (result.error) {
-        toast.error("Sign-in failed. Please try again.");
-        setLoading(false);
-        return;
+  setLoading(true);
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: "https://bara-ai-new24.vercel.app/auth/callback"
       }
-      if (result.redirected) return;
-    } catch {
-      toast.error("Sign-in failed. Please try again.");
+    });
+
+    if (error) {
+      toast.error("Sign-in failed: " + error.message);
       setLoading(false);
+      return;
     }
-  };
+  } catch {
+    toast.error("Sign-in failed. Please try again.");
+    setLoading(false);
+  }
+};
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#0a0a0a] text-foreground">
