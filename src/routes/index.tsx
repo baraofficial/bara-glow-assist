@@ -66,7 +66,7 @@ function Login() {
 />
 
           <h1 className="mt-8 text-3xl font-black tracking-wider sm:text-4xl text-red-500">
-            Bara AI v24.0
+            Bara AI v24.08
           </h1>
           <p className="mt-3 max-w-sm text-sm text-muted-foreground sm:text-base">
             AI Assistant from Bara Official
