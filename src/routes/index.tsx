@@ -34,8 +34,8 @@ function Login() {
   const handleGoogle = async () => {
     setLoading(true);
     try {
-      const result = await supabse.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const result = await supabase.auth.signInWithOAuth("google", {
+        redirectTo: `https://bara-ai-new24.vercel.app/auth/callback`
       });
       if (result.error) {
         toast.error("Sign-in failed. Please try again.");
