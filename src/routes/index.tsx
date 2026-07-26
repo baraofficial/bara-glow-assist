@@ -5,9 +5,6 @@ import { createClient } from '@supabase/supabase-js'
 import { LogoFlame } from "@/components/LogoFlame";
 import { toast } from "sonner";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL=https://dswyslvxtzuyohuffnvb.supabase.co
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzd3lzbHZ4dHp1eW9odWZmbnZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwMTg1MzYsImV4cCI6MjEwMDU5NDUzNn0.-CmcsVO-cc4dR0i1ma95SQHXVr5sx0M0gmBo5xtW0As
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
