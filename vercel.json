@@ -1,6 +1,7 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
-    { "source": "/auth/callback", "destination": "/" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
